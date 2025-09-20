@@ -1,11 +1,9 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, SafeAreaView } from 'react-native';
-import BottomNavigation from './src/components/BottomNavigation';
-import HomeScreen from './src/components/HomeScreen';
-import VisualizationScreen from './src/components/VisualizationScreen';
-import SettingsScreen from './src/components/SettingsScreen';
+import BottomNavigation from './components/BottomNavigation';
+import HomeScreen from './components/HomeScreen';
+import VisualizationScreen from './components/VisualizationScreen';
+import SettingsScreen from './components/SettingsScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const defaultSettings = {
@@ -15,7 +13,7 @@ const defaultSettings = {
 };
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'chart' | 'settings'>('home');
   const [settings, setSettings] = useState(defaultSettings);
 
   useEffect(() => {
@@ -28,6 +26,11 @@ export default function App() {
       }
     })();
   }, []);
+
+  const handleSettingsChange = async (newSettings: typeof defaultSettings) => {
+    setSettings(newSettings);
+    await AsyncStorage.setItem('smokingSettings', JSON.stringify(newSettings));
+  };
 
   let ScreenComponent = null;
   if (activeTab === 'home') {
@@ -43,7 +46,7 @@ export default function App() {
       <View style={styles.vertical}>
         <View style={styles.content}>{ScreenComponent}</View>
         <SafeAreaView style={styles.bottomNavArea}>
-          <BottomNavigation activeTab={activeTab} onTabChange={tab => setActiveTab(tab)} />
+          <BottomNavigation activeTab={activeTab} onTabChange={tab => setActiveTab(tab as 'home' | 'chart' | 'settings')} />
         </SafeAreaView>
       </View>
     </View>
@@ -55,14 +58,14 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
+  bottomNavArea: {
+    backgroundColor: '#fff',
+  },
   vertical: {
     flex: 1,
     flexDirection: 'column',
   },
   content: {
     flex: 1,
-  },
-  bottomNavArea: {
-    backgroundColor: '#fff',
   },
 });
