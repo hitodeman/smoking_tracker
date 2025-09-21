@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-const settings = {
+const defaultSettings = {
   pricePerPack: 600,
   targetCount: 10,
   cigarettesPerPack: 20,
@@ -14,6 +16,7 @@ export default function HomeScreen() {
   const [monthTotalCount, setMonthTotalCount] = useState(0);
   const [monthCountDifference, setMonthCountDifference] = useState(0);
   const [monthCostDifference, setMonthCostDifference] = useState(0);
+  const [settings, setSettings] = useState(defaultSettings);
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -23,15 +26,46 @@ export default function HomeScreen() {
       const todayRecord = records.find((r: any) => r.date === today);
       setTodayCount(todayRecord?.count || 0);
 
-      // 今月の浮いた金額
+      // 設定を読み込む
+      const settingsStr = await AsyncStorage.getItem('smokingSettings');
+      let currentSettings = defaultSettings;
+      if (settingsStr) {
+        const savedSettings = JSON.parse(settingsStr);
+        // 保存された設定値が有効かチェック
+        currentSettings = {
+          pricePerPack: isNaN(savedSettings.pricePerPack) || savedSettings.pricePerPack <= 0 ? defaultSettings.pricePerPack : savedSettings.pricePerPack,
+          targetCount: isNaN(savedSettings.targetCount) || savedSettings.targetCount < 0 ? defaultSettings.targetCount : savedSettings.targetCount,
+          cigarettesPerPack: isNaN(savedSettings.cigarettesPerPack) || savedSettings.cigarettesPerPack <= 0 ? defaultSettings.cigarettesPerPack : savedSettings.cigarettesPerPack,
+          averageCountBefore: isNaN(savedSettings.averageCountBefore) || savedSettings.averageCountBefore < 0 ? defaultSettings.averageCountBefore : savedSettings.averageCountBefore,
+        };
+      }
+      setSettings(currentSettings);
+
+      // アプリ開始日を取得
+      let appStartDate = await AsyncStorage.getItem('appStartDate');
+      if (!appStartDate) {
+        appStartDate = today;
+        await AsyncStorage.setItem('appStartDate', appStartDate);
+      }
+
+      // 今月の浮いた金額（アプリ利用開始日を加味）
       const currentMonth = new Date().toISOString().slice(0, 7);
       const monthRecords = records.filter((r: any) => r.date.startsWith(currentMonth));
       const monthTotal = monthRecords.reduce((sum: number, r: any) => sum + r.count, 0);
       setMonthTotalCount(monthTotal);
-      const dayOfMonth = new Date().getDate();
-      const expectedMonthCount = settings.averageCountBefore * dayOfMonth;
+      
+      // 今月のアプリ利用日数を計算
+      const currentDate = new Date();
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const appStart = new Date(appStartDate);
+      
+      // 今月の開始日は、月初かアプリ開始日のいずれか遅い方
+      const monthStartForCalculation = appStart > startOfMonth ? appStart : startOfMonth;
+      const daysInMonth = Math.floor((currentDate.getTime() - monthStartForCalculation.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      
+      const expectedMonthCount = currentSettings.averageCountBefore * daysInMonth;
       setMonthCountDifference(expectedMonthCount - monthTotal);
-      setMonthCostDifference((expectedMonthCount - monthTotal) * (settings.pricePerPack / settings.cigarettesPerPack));
+      setMonthCostDifference((expectedMonthCount - monthTotal) * (currentSettings.pricePerPack / currentSettings.cigarettesPerPack));
     })();
   }, [today, todayCount]);
 
@@ -59,7 +93,10 @@ export default function HomeScreen() {
     <SafeAreaView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={[styles.root, { paddingBottom: 80 }] }>
         <View style={styles.card}>
-        <Text style={styles.title}>今日の喫煙本数</Text>
+        <View style={styles.titleRow}>
+          <MaterialCommunityIcons name="cigar" size={24} color="orange" />
+          <Text style={styles.title}>今日の喫煙本数</Text>
+        </View>
         <Text style={styles.count}>{todayCount}</Text>
         <View style={styles.buttonRow}>
           <TouchableOpacity
@@ -82,7 +119,7 @@ export default function HomeScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>今日の費用</Text>
         <Text style={styles.value}>¥{todayCost.toFixed(0)}</Text>
-        <Text style={styles.sectionTitle}>目標との差分</Text>
+        <Text style={styles.sectionTitle}>目標との差</Text>
         <Text style={[styles.value, targetDifference <= 0 ? { color: '#2196f3' } : { color: '#f44336' }]}>
           {targetDifference > 0 ? '+' : ''}{targetDifference}本
         </Text>
@@ -107,11 +144,11 @@ export default function HomeScreen() {
       <View style={[styles.card, { backgroundColor: '#e3f2fd' }] }>
         {targetDifference <= 0 ? (
           <Text style={{ color: '#1976d2' }}>
-            今日は目標を達成しています！この調子で続けましょう 🎉
+            目標を達成しています！この調子で続けましょう 🎉
           </Text>
         ) : (
           <Text style={{ color: '#7b1fa2' }}>
-            目標まであと{Math.abs(targetDifference)}本です。頑張りましょう 💪
+            目標から{Math.abs(targetDifference)}本超過しています。今日はなるべく控えめにしましょう。
           </Text>
         )}
         </View>
@@ -135,11 +172,16 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+    gap: 8,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
-    marginBottom: 8,
-    textAlign: 'center',
   },
   count: {
     fontSize: 48,

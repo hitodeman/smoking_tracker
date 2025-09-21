@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-// import HomeIcon from './HomeIcon';
+import { Ionicons } from '@expo/vector-icons';
 
 interface BottomNavigationProps {
   activeTab: string;
@@ -8,9 +8,9 @@ interface BottomNavigationProps {
 }
 
 const tabs = [
-  { id: 'home', label: 'ホーム', icon: '🏠' },
-  { id: 'chart', label: 'グラフ', icon: '📈' },
-  { id: 'settings', label: '設定', icon: '⚙️' },
+  { id: 'home', label: 'ホーム', iconName: 'home-outline' },
+  { id: 'chart', label: '情報', iconName: 'bar-chart-outline' },
+  { id: 'settings', label: '設定', iconName: 'settings-outline' },
 ];
 
 export default function BottomNavigation({ activeTab, onTabChange }: BottomNavigationProps) {
@@ -24,7 +24,11 @@ export default function BottomNavigation({ activeTab, onTabChange }: BottomNavig
             onPress={() => onTabChange(tab.id)}
             style={styles.tabButton}
           >
-            <Text style={[styles.icon, isActive && styles.active]}>{tab.icon}</Text>
+            <Ionicons 
+              name={tab.iconName as any} 
+              size={24} 
+              color={isActive ? '#1976d2' : '#888'} 
+            />
             <Text style={[styles.label, isActive && styles.active]}>{tab.label}</Text>
           </TouchableOpacity>
         );
@@ -44,21 +48,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   tabButton: {
-    flex: 1,
     alignItems: 'center',
-    paddingVertical: 4,
-  },
-  icon: {
-    fontSize: 24,
-    marginBottom: 2,
-    color: '#888',
+    paddingVertical: 8,
   },
   label: {
     fontSize: 12,
     color: '#888',
+    marginTop: 4,
   },
   active: {
     color: '#1976d2',
-    fontWeight: 'bold',
   },
 });
