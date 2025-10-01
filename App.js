@@ -3,11 +3,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import * as SplashScreen from 'expo-splash-screen';
 import BottomNavigation from './src/components/BottomNavigationNew';
 import HomeScreen from './src/components/HomeScreen';
 import VisualizationScreen from './src/components/VisualizationScreen';
 import SettingsScreen from './src/components/SettingsScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// スプラッシュスクリーンを即座に非表示にする
+SplashScreen.hideAsync();
 
 const defaultSettings = {
   pricePerPack: 600,

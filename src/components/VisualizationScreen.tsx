@@ -197,7 +197,7 @@ export default function VisualizationScreen() {
 
       {/* 累計情報 */}
       <View style={styles.totalCard}>
-        <Text style={styles.totalTitle}>📊 累計統計</Text>
+        <Text style={styles.totalTitle}>📊 累計情報</Text>
         <View style={styles.totalRow}>
           <View style={styles.totalItem}>
             <Text style={styles.totalLabel}>総喫煙本数</Text>

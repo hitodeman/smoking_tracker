@@ -1,23 +1,26 @@
 {
   "expo": {
-    "name": "smoking_tracker_mobile",
-    "slug": "smoking_tracker_mobile",
+    "name": "Smoking Tracker",
+    "slug": "smoking-tracker-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
-    "developmentClient": {
-      "silentLaunch": false
-    },
     "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "resizeMode": "contain"
     },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.smoking-tracker-mobile"
+      "bundleIdentifier": "com.smokingtracker.mobile",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -31,7 +34,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-asset"
-    ]
+      "expo-asset",
+      "expo-splash-screen"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "170195ec-d250-4d78-88a8-ee1b106a0a64"
+      }
+    }
   }
 }

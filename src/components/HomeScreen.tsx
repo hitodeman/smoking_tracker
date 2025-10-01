@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, AppState } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import WidgetDataManager from '../services/WidgetDataManager';
 
 const defaultSettings = {
   pricePerPack: 600,
@@ -20,50 +19,13 @@ export default function HomeScreen() {
   const [settings, setSettings] = useState(defaultSettings);
   const today = new Date().toISOString().split('T')[0];
 
-  // Widget同期処理
-  const syncWithWidget = async () => {
-    try {
-      const recordsStr = await AsyncStorage.getItem('smokingRecords');
-      const records = recordsStr ? JSON.parse(recordsStr) : [];
-      const todayRecord = records.find((r: any) => r.date === today);
-      let currentCount = todayRecord?.count || 0;
-      
-      const widgetCount = await WidgetDataManager.getTodayCount();
-      if (widgetCount > currentCount) {
-        // Widgetの方が新しい場合
-        const existingIndex = records.findIndex((r: any) => r.date === today);
-        if (existingIndex >= 0) {
-          records[existingIndex].count = widgetCount;
-        } else {
-          records.push({ date: today, count: widgetCount });
-        }
-        await AsyncStorage.setItem('smokingRecords', JSON.stringify(records));
-        setTodayCount(widgetCount);
-        console.log('Widget→App同期:', widgetCount);
-        return widgetCount;
-      } else if (currentCount > widgetCount) {
-        // アプリの方が新しい場合
-        await WidgetDataManager.setTodayCount(currentCount);
-        console.log('App→Widget同期:', currentCount);
-      }
-      return currentCount;
-    } catch (error) {
-      console.warn('Widget同期エラー:', error);
-      return todayCount;
-    }
-  };
-
   useEffect(() => {
-    let syncInterval: NodeJS.Timeout;
-    
     (async () => {
       const recordsStr = await AsyncStorage.getItem('smokingRecords');
       const records = recordsStr ? JSON.parse(recordsStr) : [];
       const todayRecord = records.find((r: any) => r.date === today);
-      let initialCount = todayRecord?.count || 0;
+      const initialCount = todayRecord?.count || 0;
       
-      // 初期同期
-      initialCount = await syncWithWidget();
       setTodayCount(initialCount);
 
       // 設定を読み込む
@@ -106,26 +68,7 @@ export default function HomeScreen() {
       const expectedMonthCount = currentSettings.averageCountBefore * daysInMonth;
       setMonthCountDifference(expectedMonthCount - monthTotal);
       setMonthCostDifference((expectedMonthCount - monthTotal) * (currentSettings.pricePerPack / currentSettings.cigarettesPerPack));
-      
-      // 定期的な同期を開始（30秒ごと）
-      syncInterval = setInterval(syncWithWidget, 30000);
     })();
-
-    // アプリがフォアグラウンドに戻った時の同期
-    const handleAppStateChange = (nextAppState: string) => {
-      if (nextAppState === 'active') {
-        syncWithWidget();
-      }
-    };
-
-    const subscription = AppState.addEventListener('change', handleAppStateChange);
-    
-    return () => {
-      subscription?.remove();
-      if (syncInterval) {
-        clearInterval(syncInterval);
-      }
-    };
   }, [today]);
 
   const updateCount = async (newCount: number) => {
@@ -142,14 +85,6 @@ export default function HomeScreen() {
       records.push({ date: today, count: newCount });
     }
     await AsyncStorage.setItem('smokingRecords', JSON.stringify(records));
-    
-    // Widgetと同期
-    try {
-      await WidgetDataManager.setTodayCount(newCount);
-      console.log('Widget同期成功:', newCount);
-    } catch (error) {
-      console.warn('Widget同期失敗:', error);
-    }
   };
 
   const costPerCigarette = settings.pricePerPack / settings.cigarettesPerPack;
