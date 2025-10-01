@@ -42,46 +42,125 @@ export default function VisualizationScreen() {
   const getChartData = () => {
     const now = new Date();
     const data = [];
-    const days = viewMode === 'week' ? 7 : 30;
     
-    // 前に1日分のダミーデータを追加
-    const beforeDate = new Date(now);
-    beforeDate.setDate(beforeDate.getDate() - days);
-    data.push({
-      date: beforeDate.toISOString().split('T')[0],
-      displayDate: '',
-      count: null,
-      target: settings.targetCount,
-    });
-    
-    // 実際のデータ
-    for (let i = days - 1; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(date.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
-      const record = records.find(r => r.date === dateString);
+    if (viewMode === 'week') {
+      // 週間表示：月曜日〜日曜日で固定
+      const currentDayOfWeek = now.getDay(); // 0=日曜日, 1=月曜日, ..., 6=土曜日
+      const mondayOffset = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // 月曜日までの日数
+      
+      // 今週の月曜日を基準にする
+      const mondayDate = new Date(now);
+      mondayDate.setDate(now.getDate() - mondayOffset);
+      
+      // 前に1日分のダミーデータを追加
+      const beforeDate = new Date(mondayDate);
+      beforeDate.setDate(mondayDate.getDate() - 1);
       data.push({
-        date: dateString,
-        displayDate: `${date.getMonth() + 1}/${date.getDate()}`,
-        count: record?.count || 0,
+        date: beforeDate.toISOString().split('T')[0],
+        displayDate: '',
+        count: null,
+        target: settings.targetCount,
+      });
+      
+      // 月曜日から日曜日まで（7日間）
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(mondayDate);
+        date.setDate(mondayDate.getDate() + i);
+        const dateString = date.toISOString().split('T')[0];
+        const record = records.find(r => r.date === dateString);
+        const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+        data.push({
+          date: dateString,
+          displayDate: `${date.getMonth() + 1}/${date.getDate()}(${dayNames[date.getDay()]})`,
+          count: record?.count || 0,
+          target: settings.targetCount,
+        });
+      }
+      
+      // 後に1日分のダミーデータを追加
+      const afterDate = new Date(mondayDate);
+      afterDate.setDate(mondayDate.getDate() + 7);
+      data.push({
+        date: afterDate.toISOString().split('T')[0],
+        displayDate: '',
+        count: null,
+        target: settings.targetCount,
+      });
+    } else {
+      // 月間表示：今月1日〜月末
+      const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      
+      // 前に1日分のダミーデータを追加
+      const beforeDate = new Date(firstDayOfMonth);
+      beforeDate.setDate(firstDayOfMonth.getDate() - 1);
+      data.push({
+        date: beforeDate.toISOString().split('T')[0],
+        displayDate: '',
+        count: null,
+        target: settings.targetCount,
+      });
+      
+      // 実際のデータ（1日から月末まで）
+      for (let date = new Date(firstDayOfMonth); date <= lastDayOfMonth; date.setDate(date.getDate() + 1)) {
+        const dateString = date.toISOString().split('T')[0];
+        const record = records.find(r => r.date === dateString);
+        data.push({
+          date: dateString,
+          displayDate: `${date.getDate()}日`,
+          count: record?.count || 0,
+          target: settings.targetCount,
+        });
+      }
+      
+      // 後に1日分のダミーデータを追加
+      const afterDate = new Date(lastDayOfMonth);
+      afterDate.setDate(lastDayOfMonth.getDate() + 1);
+      data.push({
+        date: afterDate.toISOString().split('T')[0],
+        displayDate: '',
+        count: null,
         target: settings.targetCount,
       });
     }
     
-    // 後に1日分のダミーデータを追加
-    const afterDate = new Date(now);
-    afterDate.setDate(afterDate.getDate() + 1);
-    data.push({
-      date: afterDate.toISOString().split('T')[0],
-      displayDate: '',
-      count: null,
-      target: settings.targetCount,
-    });
-    
     return data;
   };
 
+  // 日付範囲を取得する関数
+  const getDateRange = () => {
+    const now = new Date();
+    
+    if (viewMode === 'week') {
+      // 週間表示：今週の月曜日〜日曜日
+      const currentDayOfWeek = now.getDay();
+      const mondayOffset = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1;
+      
+      const mondayDate = new Date(now);
+      mondayDate.setDate(now.getDate() - mondayOffset);
+      
+      const sundayDate = new Date(mondayDate);
+      sundayDate.setDate(mondayDate.getDate() + 6);
+      
+      return {
+        startDate: `${mondayDate.getMonth() + 1}月${mondayDate.getDate()}日`,
+        endDate: `${sundayDate.getMonth() + 1}月${sundayDate.getDate()}日`,
+        monthName: undefined
+      };
+    } else {
+      // 月間表示：今月
+      return {
+        startDate: undefined,
+        endDate: undefined,
+        monthName: `${now.getMonth() + 1}月`
+      };
+    }
+  };
+
   const chartData = getChartData();
+  const dateRange = getDateRange();
+  
+  // 統計計算：チャートと同じデータを使用して一致を保証
   const totalCount = chartData.reduce((sum, item) => sum + (item.count || 0), 0);
   const validDataCount = chartData.filter(item => item.count !== null).length;
   const averageCount = validDataCount > 0 ? totalCount / validDataCount : 0;
@@ -150,7 +229,12 @@ export default function VisualizationScreen() {
 
       {/* 折れ線グラフ */}
       <View style={styles.chartCard}>
-        <Text style={styles.chartTitle}>日別喫煙本数</Text>
+        <Text style={styles.chartTitle}>
+          {viewMode === 'week' 
+            ? `日別喫煙本数（${dateRange.startDate}〜${dateRange.endDate}）`
+            : `日別喫煙本数（${dateRange.monthName}）`
+          }
+        </Text>
         <View style={{ width: screenWidth - 32, height: 260 }}>
           <CartesianChart
             data={chartData}
@@ -201,11 +285,11 @@ export default function VisualizationScreen() {
         <View style={styles.totalRow}>
           <View style={styles.totalItem}>
             <Text style={styles.totalLabel}>総喫煙本数</Text>
-            <Text style={styles.totalValue}>{totalSmokingCount}本</Text>
+            <Text style={styles.totalValue}>{totalSmokingCount.toLocaleString('ja-JP')}本</Text>
           </View>
           <View style={styles.totalItem}>
             <Text style={styles.totalLabel}>アプリ利用日数</Text>
-            <Text style={styles.totalValue}>{totalDays}日</Text>
+            <Text style={styles.totalValue}>{totalDays.toLocaleString('ja-JP')}日</Text>
           </View>
         </View>
         <View style={styles.totalRow}>
@@ -218,7 +302,7 @@ export default function VisualizationScreen() {
           <View style={styles.totalItem}>
             <Text style={styles.totalLabel}>累計費用</Text>
             <Text style={[styles.totalValue, { color: '#f44336' }]}>
-              ¥{(totalSmokingCount * (settings.pricePerPack / settings.cigarettesPerPack)).toFixed(0)}
+              ¥{Math.round(totalSmokingCount * (settings.pricePerPack / settings.cigarettesPerPack)).toLocaleString('ja-JP')}
             </Text>
           </View>
         </View>

@@ -85,6 +85,29 @@ export default function HomeScreen() {
       records.push({ date: today, count: newCount });
     }
     await AsyncStorage.setItem('smokingRecords', JSON.stringify(records));
+
+    // 月間統計を即座に更新
+    const currentMonth = new Date().toISOString().slice(0, 7);
+    const monthRecords = records.filter((r: any) => r.date.startsWith(currentMonth));
+    const monthTotal = monthRecords.reduce((sum: number, r: any) => sum + r.count, 0);
+    setMonthTotalCount(monthTotal);
+
+    // 今月のアプリ利用日数を再計算
+    const appStartDate = await AsyncStorage.getItem('appStartDate') || today;
+    const currentDate = new Date();
+    const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const appStart = new Date(appStartDate);
+    
+    // 今月の開始日は、月初かアプリ開始日のいずれか遅い方
+    const monthStartForCalculation = appStart > startOfMonth ? appStart : startOfMonth;
+    const daysInMonth = Math.floor((currentDate.getTime() - monthStartForCalculation.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    
+    const expectedMonthCount = settings.averageCountBefore * daysInMonth;
+    const newMonthCountDifference = expectedMonthCount - monthTotal;
+    const newMonthCostDifference = newMonthCountDifference * (settings.pricePerPack / settings.cigarettesPerPack);
+    
+    setMonthCountDifference(newMonthCountDifference);
+    setMonthCostDifference(newMonthCostDifference);
   };
 
   const costPerCigarette = settings.pricePerPack / settings.cigarettesPerPack;
@@ -122,7 +145,7 @@ export default function HomeScreen() {
       {/* 統計情報 */}
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>今日の費用</Text>
-        <Text style={styles.value}>¥{todayCost.toFixed(0)}</Text>
+        <Text style={styles.value}>¥{Math.round(todayCost).toLocaleString('ja-JP')}</Text>
         <Text style={styles.sectionTitle}>目標との差</Text>
         <Text style={[styles.value, targetDifference <= 0 ? { color: '#2196f3' } : { color: '#f44336' }]}>
           {targetDifference > 0 ? '+' : ''}{targetDifference}本
@@ -136,11 +159,11 @@ export default function HomeScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>今日の浮いた金額</Text>
         <Text style={[styles.value, todayCostDifference >= 0 ? { color: '#43a047' } : { color: '#f44336' }]}>
-          {todayCostDifference >= 0 ? '+' : ''}¥{todayCostDifference.toFixed(0)}
+          {todayCostDifference >= 0 ? '+' : ''}¥{Math.round(Math.abs(todayCostDifference)).toLocaleString('ja-JP')}
         </Text>
         <Text style={styles.sectionTitle}>今月の浮いた金額</Text>
         <Text style={[styles.value, monthCostDifference >= 0 ? { color: '#7b1fa2' } : { color: '#f44336' }]}>
-          {monthCostDifference >= 0 ? '+' : ''}¥{monthCostDifference.toFixed(0)}
+          {monthCostDifference >= 0 ? '+' : ''}¥{Math.round(Math.abs(monthCostDifference)).toLocaleString('ja-JP')}
         </Text>
       </View>
 

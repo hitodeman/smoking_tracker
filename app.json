@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Smoking Tracker",
+    "name": "Noタバコ！",
     "slug": "smoking-tracker-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -18,8 +18,11 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.smokingtracker.mobile",
       "buildNumber": "1",
+      "displayName": "Noタバコ！",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDisplayName": "Noタバコ！",
+        "CFBundleName": "Noタバコ！"
       }
     },
     "android": {
