@@ -18,7 +18,6 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.smokingtracker.mobile",
       "buildNumber": "1",
-      "displayName": "Noタバコ！",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDisplayName": "Noタバコ！",

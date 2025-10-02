@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Dimensions } from
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CartesianChart, Line, Scatter } from 'victory-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 
 const defaultSettings = {
@@ -188,42 +189,57 @@ export default function VisualizationScreen() {
   const screenWidth = Dimensions.get('window').width;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={[styles.root, { paddingBottom: 30 }] }>
+    <LinearGradient
+      colors={['#f8fafc', '#dbeafe', '#e0e7ff']}
+      style={{ flex: 1 }}
+    >
+      <ScrollView contentContainerStyle={[styles.root, { paddingBottom: 20 }] }>
         <View style={styles.headerRow}>
-          <Ionicons name="calendar" size={24} color="#001EFF93" />
+          <LinearGradient
+            colors={['#60a5fa', '#a855f7']}
+            style={styles.iconContainer}
+          >
+            <Ionicons name="bar-chart" size={20} color="white" />
+          </LinearGradient>
           <Text style={styles.header}>喫煙データ</Text>
         </View>
 
       {/* 期間選択 */}
-      <View style={styles.buttonRow}>
-        <TouchableOpacity
-          style={[styles.switchButton, viewMode === 'week' && styles.switchButtonActive]}
-          onPress={() => setViewMode('week')}
-        >
-          <Text style={viewMode === 'week' ? styles.switchButtonTextActive : styles.switchButtonText}>週間表示</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.switchButton, viewMode === 'month' && styles.switchButtonActive]}
-          onPress={() => setViewMode('month')}
-        >
-          <Text style={viewMode === 'month' ? styles.switchButtonTextActive : styles.switchButtonText}>月間表示</Text>
-        </TouchableOpacity>
+      <View style={styles.toggleCard}>
+        <View style={styles.toggleContainer}>
+          <TouchableOpacity
+            style={[styles.toggleButton, viewMode === 'week' && styles.toggleButtonActive]}
+            onPress={() => setViewMode('week')}
+          >
+            <Text style={[styles.toggleButtonText, viewMode === 'week' && styles.toggleButtonTextActive]}>
+              週間表示
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[styles.toggleButton, viewMode === 'month' && styles.toggleButtonActive]}
+            onPress={() => setViewMode('month')}
+          >
+            <Text style={[styles.toggleButtonText, viewMode === 'month' && styles.toggleButtonTextActive]}>
+              月間表示
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* 統計サマリー */}
-      <View style={styles.summaryRow}>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>合計</Text>
-          <Text style={styles.summaryValue}>{totalCount}本</Text>
+      <View style={styles.overviewGrid}>
+        <View style={styles.overviewCard}>
+          <Text style={styles.overviewLabel}>合計</Text>
+          <Text style={styles.overviewValue}>{totalCount}本</Text>
         </View>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>平均</Text>
-          <Text style={styles.summaryValue}>{averageCount.toFixed(1)}本</Text>
+        <View style={styles.overviewCard}>
+          <Text style={styles.overviewLabel}>平均</Text>
+          <Text style={styles.overviewValue}>{averageCount.toFixed(1)}本</Text>
         </View>
-        <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>達成率</Text>
-          <Text style={[styles.summaryValue, { color: '#43a047' }]}>{achievementRate.toFixed(0)}%</Text>
+        <View style={styles.overviewCard}>
+          <Text style={styles.overviewLabel}>達成率</Text>
+          <Text style={[styles.overviewValue, styles.achievementValue]}>{achievementRate.toFixed(0)}%</Text>
         </View>
       </View>
 
@@ -235,12 +251,12 @@ export default function VisualizationScreen() {
             : `日別喫煙本数（${dateRange.monthName}）`
           }
         </Text>
-        <View style={{ width: screenWidth - 32, height: 260 }}>
+        <View style={{ width: screenWidth - 24, height: 220 }}>
           <CartesianChart
             data={chartData}
             xKey="displayDate"
             yKeys={["count", "target"]}
-            padding={{ left: 20, right: 30, top: 24, bottom: 30 }}
+            padding={{ left: 18, right: 24, top: 16, bottom: 22 }}
             domain={{ y: [-1, yAxisMax] }}
           >
             {({ points }) => (
@@ -280,181 +296,245 @@ export default function VisualizationScreen() {
       </View>
 
       {/* 累計情報 */}
-      <View style={styles.totalCard}>
-        <Text style={styles.totalTitle}>📊 累計情報</Text>
-        <View style={styles.totalRow}>
-          <View style={styles.totalItem}>
-            <Text style={styles.totalLabel}>総喫煙本数</Text>
-            <Text style={styles.totalValue}>{totalSmokingCount.toLocaleString('ja-JP')}本</Text>
+      <LinearGradient
+        colors={['rgba(238, 242, 255, 1)', 'rgba(243, 232, 255, 1)']}
+        style={styles.summaryCard}
+      >
+        <View style={styles.summaryContent}>
+          <View style={styles.summaryHeader}>
+            <Ionicons name="trending-up" size={20} color="#6366f1" />
+            <Text style={styles.summaryTitle}>累計情報</Text>
           </View>
-          <View style={styles.totalItem}>
-            <Text style={styles.totalLabel}>アプリ利用日数</Text>
-            <Text style={styles.totalValue}>{totalDays.toLocaleString('ja-JP')}日</Text>
+          
+          <View style={styles.summaryGrid}>
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>総喫煙本数</Text>
+              <Text style={styles.summaryValue}>
+                {totalSmokingCount.toLocaleString('ja-JP')}本
+              </Text>
+            </View>
+            
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>アプリ利用日数</Text>
+              <Text style={styles.summaryValue}>
+                {totalDays.toLocaleString('ja-JP')}日
+              </Text>
+            </View>
+            
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>全期間平均</Text>
+              <Text style={styles.summaryValue}>
+                {overallAverage.toFixed(1)}本/日
+              </Text>
+            </View>
+            
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>累計費用</Text>
+              <Text style={[styles.summaryValue, styles.costValue]}>
+                ¥{Math.round(totalSmokingCount * (settings.pricePerPack / settings.cigarettesPerPack)).toLocaleString('ja-JP')}
+              </Text>
+            </View>
           </View>
         </View>
-        <View style={styles.totalRow}>
-          <View style={styles.totalItem}>
-            <Text style={styles.totalLabel}>全期間平均</Text>
-            <Text style={styles.totalValue}>
-              {overallAverage.toFixed(1)}本/日
-            </Text>
-          </View>
-          <View style={styles.totalItem}>
-            <Text style={styles.totalLabel}>累計費用</Text>
-            <Text style={[styles.totalValue, { color: '#f44336' }]}>
-              ¥{Math.round(totalSmokingCount * (settings.pricePerPack / settings.cigarettesPerPack)).toLocaleString('ja-JP')}
-            </Text>
-          </View>
-        </View>
-      </View>
+      </LinearGradient>
     </ScrollView>
-    </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: 'transparent',
   },
   root: {
-    padding: 16,
-    backgroundColor: '#fafafa',
+    padding: 12,
+    backgroundColor: 'transparent',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 12,
-    gap: 8,
+    marginBottom: 8,
+    gap: 10,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   header: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1f2937',
   },
-  buttonRow: {
-    flexDirection: 'row',
+  toggleCard: {
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 6,
     marginBottom: 12,
-    gap: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
-  switchButton: {
+  toggleContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 10,
+    padding: 3,
+  },
+  toggleButton: {
     flex: 1,
     paddingVertical: 10,
-    backgroundColor: '#eee',
-    borderRadius: 8,
-    marginHorizontal: 4,
+    paddingHorizontal: 14,
     alignItems: 'center',
+    borderRadius: 7,
   },
-  switchButtonActive: {
-    backgroundColor: '#000000',
+  toggleButtonActive: {
+    backgroundColor: 'white',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
-  switchButtonText: {
-    color: '#555',
-    fontWeight: 'bold',
+  toggleButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#6b7280',
   },
-  switchButtonTextActive: {
-    color: '#fff',
-    fontWeight: 'bold',
+  toggleButtonTextActive: {
+    color: '#1f2937',
+    fontWeight: '600',
   },
-  summaryRow: {
+  overviewGrid: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 12,
-    gap: 8,
+    gap: 6,
   },
-  summaryCard: {
+  overviewCard: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 10,
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
-  summaryLabel: {
-    fontSize: 12,
-    color: '#888',
+  overviewLabel: {
+    fontSize: 11,
+    color: '#6b7280',
     marginBottom: 2,
+    fontWeight: '500',
   },
-  summaryValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
+  overviewValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#1f2937',
+  },
+  achievementValue: {
+    color: '#10b981',
   },
   chartCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
+    backgroundColor: 'white',
+    borderRadius: 14,
+    padding: 16,
     marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#eee',
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
   },
   chartTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    marginBottom: 8,
+    fontWeight: '700',
+    marginBottom: 12,
+    color: '#1f2937',
   },
   legendRow: {
     flexDirection: 'row',
-    marginTop: 8,
+    marginTop: 12,
     gap: 16,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
   },
   legendItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
   },
   legendDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 4,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
   },
   legendLine: {
-    width: 16,
-    height: 2,
-    marginRight: 4,
+    width: 14,
+    height: 3,
+    borderRadius: 1.5,
+    marginRight: 6,
     alignSelf: 'center',
   },
   legendLabel: {
     fontSize: 12,
-    color: '#555',
+    color: '#6b7280',
+    fontWeight: '500',
   },
-  totalCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#eee',
+  summaryCard: {
+    borderRadius: 14,
+    padding: 10,
+    overflow: 'hidden',
+    marginBottom: 10,
   },
-  totalTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    textAlign: 'center',
-    color: '#333',
+  summaryContent: {
+    gap: 8,
   },
-  totalRow: {
+  summaryHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  totalItem: {
-    flex: 1,
     alignItems: 'center',
-    paddingHorizontal: 8,
+    gap: 6,
   },
-  totalLabel: {
-    fontSize: 12,
-    color: '#888',
-    marginBottom: 4,
-    textAlign: 'center',
+  summaryTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
   },
-  totalValue: {
+  summaryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  summaryItem: {
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    padding: 8,
+    width: '48%',
+    alignItems: 'flex-start',
+  },
+  summaryLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    fontWeight: '500',
+    marginBottom: 2,
+    textAlign: 'left',
+  },
+  summaryValue: {
     fontSize: 16,
     fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#333',
+    color: '#1f2937',
+    textAlign: 'left',
+  },
+  costValue: {
+    color: '#dc2626',
   },
 });

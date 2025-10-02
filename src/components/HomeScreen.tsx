@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
+import { BlurView } from 'expo-blur';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 const defaultSettings = {
@@ -117,132 +120,339 @@ export default function HomeScreen() {
   const todayCostDifference = todayCountDifference * costPerCigarette;
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView contentContainerStyle={[styles.root, { paddingBottom: 80 }] }>
-        <View style={styles.card}>
-        <View style={styles.titleRow}>
-          <MaterialCommunityIcons name="cigar" size={24} color="orange" />
-          <Text style={styles.title}>今日の喫煙本数</Text>
-        </View>
-        <Text style={styles.count}>{todayCount}</Text>
-        <View style={styles.buttonRow}>
-          <TouchableOpacity
-            style={[styles.circleButton, { backgroundColor: '#eee' }]}
-            onPress={() => updateCount(todayCount - 1)}
-            disabled={todayCount === 0}
-          >
-            <Text style={styles.buttonText}>-</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.circleButton, { backgroundColor: '#ff9800' }]}
-            onPress={() => updateCount(todayCount + 1)}
-          >
-            <Text style={[styles.buttonText, { color: '#fff' }]}>+</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+    <LinearGradient
+      colors={['#f8fafc', '#dbeafe', '#e0e7ff']}
+      style={{ flex: 1 }}
+    >
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+        <View style={styles.content}>
+          {/* Main Counter Card */}
+          <BlurView intensity={20} style={styles.mainCard}>
+            <LinearGradient
+              colors={['rgba(251, 146, 60, 0.1)', 'rgba(239, 68, 68, 0.1)']}
+              style={styles.cardGradient}
+            />
+            <View style={styles.cardContent}>
+              <View style={styles.titleContainer}>
+                <LinearGradient
+                  colors={['#fb923c', '#ef4444']}
+                  style={styles.iconContainer}
+                >
+                  <MaterialCommunityIcons name="cigar" size={20} color="white" />
+                </LinearGradient>
+                <Text style={styles.cardTitle}>今日の喫煙本数</Text>
+              </View>
+              
+              <Text style={styles.counterText}>{todayCount}</Text>
+              
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity 
+                  style={styles.minusButton}
+                  onPress={() => updateCount(todayCount - 1)}
+                  disabled={todayCount === 0}
+                >
+                  <Ionicons name="remove" size={24} color="#6b7280" />
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={styles.plusButton}
+                  onPress={() => updateCount(todayCount + 1)}
+                >
+                  <LinearGradient
+                    colors={['#fb923c', '#ef4444']}
+                    style={styles.plusButtonGradient}
+                  >
+                    <Ionicons name="add" size={24} color="white" />
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </BlurView>
 
-      {/* 統計情報 */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>今日の費用</Text>
-        <Text style={styles.value}>¥{Math.round(todayCost).toLocaleString('ja-JP')}</Text>
-        <Text style={styles.sectionTitle}>目標との差</Text>
-        <Text style={[styles.value, targetDifference <= 0 ? { color: '#2196f3' } : { color: '#f44336' }]}>
-          {targetDifference > 0 ? '+' : ''}{targetDifference}本
-        </Text>
-        {targetDifference <= 0 && (
-          <Text style={{ color: '#4caf50' }}>目標達成！</Text>
-        )}
-      </View>
+          {/* Stats Cards */}
+          <View style={styles.statsContainer}>
+            {/* Cost and Target Card */}
+            <View style={styles.statCard}>
+              <View style={styles.dualStatContent}>
+                {/* Cost Section */}
+                <View style={styles.statSection}>
+                  <Text style={styles.statLabel}>今日の費用</Text>
+                  <Text style={styles.statValue}>¥{Math.round(todayCost).toLocaleString('ja-JP')}</Text>
+                </View>
+                
+                {/* Divider */}
+                <View style={styles.divider} />
+                
+                {/* Target Section */}
+                <View style={styles.statSection}>
+                  <View style={styles.statHeader}>
+                    <Ionicons name="flag" size={16} color="#ef4444" />
+                    <Text style={styles.statLabel}>目標との差</Text>
+                  </View>
+                  <Text style={[styles.targetValue, targetDifference <= 0 ? { color: '#059669' } : { color: '#ef4444' }]}>
+                    {targetDifference > 0 ? '+' : ''}{targetDifference}本
+                  </Text>
+                  {targetDifference <= 0 && (
+                    <Text style={styles.achievementText}>目標達成！</Text>
+                  )}
+                </View>
+              </View>
+            </View>
 
-      {/* 浮いた金額 */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>今日の浮いた金額</Text>
-        <Text style={[styles.value, todayCostDifference >= 0 ? { color: '#43a047' } : { color: '#f44336' }]}>
-          {todayCostDifference >= 0 ? '+' : ''}¥{Math.round(Math.abs(todayCostDifference)).toLocaleString('ja-JP')}
-        </Text>
-        <Text style={styles.sectionTitle}>今月の浮いた金額</Text>
-        <Text style={[styles.value, monthCostDifference >= 0 ? { color: '#7b1fa2' } : { color: '#f44336' }]}>
-          {monthCostDifference >= 0 ? '+' : ''}¥{Math.round(Math.abs(monthCostDifference)).toLocaleString('ja-JP')}
-        </Text>
-      </View>
+            {/* Savings Card */}
+            <View style={styles.savingsCardWrapper}>
+              <View style={styles.dualSavingsContent}>
+                {/* Today's Savings Section */}
+                <LinearGradient
+                  colors={['rgba(34, 197, 94, 0.1)', 'rgba(16, 185, 129, 0.1)']}
+                  style={styles.savingsBackground}
+                >
+                  <View style={styles.statHeader}>
+                    <Ionicons name="trending-up" size={16} color="#059669" />
+                    <Text style={[styles.statLabel, styles.greenText]}>今日の浮いた金額</Text>
+                  </View>
+                  <Text style={styles.savingsValue}>
+                    {todayCostDifference >= 0 ? '+' : ''}¥{Math.round(Math.abs(todayCostDifference)).toLocaleString('ja-JP')}
+                  </Text>
+                </LinearGradient>
+                
+                {/* Divider */}
+                <View style={styles.divider} />
+                
+                {/* Monthly Savings Section */}
+                <LinearGradient
+                  colors={['rgba(147, 51, 234, 0.1)', 'rgba(124, 58, 237, 0.1)']}
+                  style={styles.savingsBackground}
+                >
+                  <Text style={[styles.statLabel, styles.purpleText]}>今月の浮いた金額</Text>
+                  <Text style={styles.purpleSavingsValue}>
+                    {monthCostDifference >= 0 ? '+' : ''}¥{Math.round(Math.abs(monthCostDifference)).toLocaleString('ja-JP')}
+                  </Text>
+                </LinearGradient>
+              </View>
+            </View>
 
-      {/* 今日のメッセージ */}
-      <View style={[styles.card, { backgroundColor: '#e3f2fd' }] }>
-        {targetDifference <= 0 ? (
-          <Text style={{ color: '#1976d2' }}>
-            目標を達成しています！この調子で続けましょう 🎉
-          </Text>
-        ) : (
-          <Text style={{ color: '#7b1fa2' }}>
-            目標から{Math.abs(targetDifference)}本超過しています。今日はなるべく控えめにしましょう。
-          </Text>
-        )}
+            {/* Motivational Message */}
+            <LinearGradient
+              colors={targetDifference <= 0 
+                ? ['rgba(34, 197, 94, 0.1)', 'rgba(16, 185, 129, 0.1)']
+                : ['rgba(59, 130, 246, 0.1)', 'rgba(99, 102, 241, 0.1)']
+              }
+              style={[styles.statCard, styles.messageCard]}
+            >
+              <View style={styles.messageContent}>
+                <Ionicons 
+                  name={targetDifference <= 0 ? "checkmark-circle" : "alert-circle"} 
+                  size={20} 
+                  color={targetDifference <= 0 ? "#059669" : "#3b82f6"} 
+                />
+                <Text style={[styles.messageText, { color: targetDifference <= 0 ? "#047857" : "#1d4ed8" }]}>
+                  {targetDifference <= 0 ? (
+                    "目標を達成しています！この調子で続けましょう 🎉"
+                  ) : (
+                    `目標から${Math.abs(targetDifference)}本超過しています。今日はなるべく控えめにしましょう。`
+                  )}
+                </Text>
+              </View>
+            </LinearGradient>
+          </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  root: {
-    padding: 16,
-    backgroundColor: '#fafafa',
+  container: {
+    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-    gap: 8,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  count: {
-    fontSize: 48,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    marginVertical: 8,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  content: {
     gap: 24,
-    marginTop: 8,
   },
-  circleButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  mainCard: {
+    borderRadius: 16,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  cardGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  cardContent: {
+    paddingHorizontal: 32,
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 12,
   },
-  buttonText: {
-    fontSize: 32,
-    fontWeight: 'bold',
+  cardTitle: {
+    fontSize: 18,
+    color: '#374151',
+    fontWeight: '500',
   },
-  sectionTitle: {
-    fontSize: 16,
+  counterText: {
+    fontSize: 80,
     fontWeight: 'bold',
-    marginTop: 8,
-    color: '#555',
+    color: '#1f2937',
+    marginBottom: 24,
   },
-  value: {
-    fontSize: 28,
-    fontWeight: 'bold',
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 32,
+  },
+  minusButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  plusButton: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    overflow: 'hidden',
+  },
+  plusButtonGradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  statsContainer: {
+    gap: 16,
+  },
+  statCard: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  dualStatContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 24,
+  },
+  statSection: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  divider: {
+    width: 1,
+    alignSelf: 'stretch',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
+    marginVertical: 0,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  statValue: {
+    fontSize: 24,
+    color: '#1f2937',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  statHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  targetValue: {
+    fontSize: 20,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  achievementText: {
+    fontSize: 12,
+    color: '#059669',
     marginTop: 4,
+    textAlign: 'center',
+  },
+  savingsCardWrapper: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  dualSavingsContent: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+    minHeight: 80,
+  },
+  savingsBackground: {
+    flex: 1,
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  greenText: {
+    color: '#047857',
+  },
+  savingsValue: {
+    fontSize: 20,
+    color: '#059669',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  purpleText: {
+    color: '#7c3aed',
+  },
+  purpleSavingsValue: {
+    fontSize: 20,
+    color: '#8b5cf6',
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  messageCard: {
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderWidth: 1,
+  },
+  messageContent: {
+    padding: 24,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  messageText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

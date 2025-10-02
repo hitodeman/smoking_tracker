@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { View, StyleSheet, Alert } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 import BottomNavigation from './components/BottomNavigationNew';
 import HomeScreen from './components/HomeScreen';
 import VisualizationScreen from './components/VisualizationScreen';
@@ -138,33 +139,45 @@ export default function App() {
   console.log('App: onTabChangeCallback type:', typeof onTabChangeCallback);
 
   return (
-    <View style={styles.container}>
-      <View style={styles.vertical}>
-        <View style={styles.content}>{ScreenComponent}</View>
-        <SafeAreaView style={styles.bottomNavArea}>
-          <BottomNavigation 
-            activeTab={activeTab} 
-            onTabChange={globalTabChangeHandler}
-          />
+    <SafeAreaProvider>
+      <LinearGradient
+        colors={['#f8fafc', '#dbeafe', '#e0e7ff']}
+        style={styles.outerContainer}
+      >
+        <SafeAreaView style={styles.container}>
+          <View style={styles.vertical}>
+            <SafeAreaView style={styles.content}>{ScreenComponent}</SafeAreaView>
+            <SafeAreaView style={styles.bottomNavArea}>
+              <BottomNavigation 
+                activeTab={activeTab} 
+                onTabChange={globalTabChangeHandler}
+              />
+            </SafeAreaView>
+          </View>
         </SafeAreaView>
-      </View>
-    </View>
+      </LinearGradient>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: 'transparent',
   },
   bottomNavArea: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
   vertical: {
     flex: 1,
     flexDirection: 'column',
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
 });

@@ -62,7 +62,9 @@ export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.vertical}>
-        <View style={styles.content}>{ScreenComponent}</View>
+        <SafeAreaView style={styles.content}>
+          {ScreenComponent}
+        </SafeAreaView>
         <SafeAreaView style={styles.bottomNavArea}>
           <BottomNavigation activeTab={activeTab} onTabChange={handleTabChange} />
         </SafeAreaView>

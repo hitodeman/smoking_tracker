@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
+import { BlurView } from 'expo-blur';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const defaultSettings = {
@@ -175,246 +178,387 @@ const SettingsScreen = forwardRef<SettingsScreenRef>((props, ref) => {
   const dailyTargetCost = localSettings.targetCount * costPerCigarette;
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={[styles.root, { paddingBottom: 80 }] }>
-        <Text style={styles.header}>設定</Text>
+    <LinearGradient
+      colors={['#f8fafc', '#dbeafe', '#e0e7ff']}
+      style={{ flex: 1 }}
+    >
+      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.title}>設定</Text>
+          </View>
 
-      {/* タバコの価格設定 */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>タバコの価格</Text>
-        <Text style={styles.label}>1箱あたりの価格（円）</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={inputValues.pricePerPack}
-          onChangeText={v => {
-            // 入力値を直接保存
-            setInputValues({ ...inputValues, pricePerPack: v });
-            
-            // 数値として有効な場合のみlocalSettingsを更新
-            if (v !== '') {
-              const parsedValue = Number(v);
-              if (!isNaN(parsedValue) && parsedValue >= 0) {
-                setLocalSettings({ ...localSettings, pricePerPack: parsedValue });
-              }
-            }
-          }}
-          onBlur={() => {
-            // フォーカスが外れた時にバリデーション
-            const parsedValue = Number(inputValues.pricePerPack);
-            if (inputValues.pricePerPack === '' || isNaN(parsedValue) || parsedValue <= 0) {
-              const defaultValue = 600;
-              setInputValues({ ...inputValues, pricePerPack: String(defaultValue) });
-              setLocalSettings({ ...localSettings, pricePerPack: defaultValue });
-            }
-          }}
-          placeholder="600"
-        />
-        <Text style={styles.label}>1箱あたりの本数</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={inputValues.cigarettesPerPack}
-          onChangeText={v => {
-            setInputValues({ ...inputValues, cigarettesPerPack: v });
-            
-            if (v !== '') {
-              const parsedValue = Number(v);
-              if (!isNaN(parsedValue) && parsedValue >= 0) {
-                setLocalSettings({ ...localSettings, cigarettesPerPack: parsedValue });
-              }
-            }
-          }}
-          onBlur={() => {
-            const parsedValue = Number(inputValues.cigarettesPerPack);
-            if (inputValues.cigarettesPerPack === '' || isNaN(parsedValue) || parsedValue <= 0) {
-              const defaultValue = 20;
-              setInputValues({ ...inputValues, cigarettesPerPack: String(defaultValue) });
-              setLocalSettings({ ...localSettings, cigarettesPerPack: defaultValue });
-            }
-          }}
-          placeholder="20"
-        />
-        <Text style={styles.hint}>1本あたりの価格: ¥{costPerCigarette.toFixed(1)}</Text>
-      </View>
+          {/* Tobacco Price Settings */}
+          <BlurView intensity={20} style={styles.settingsCard}>
+            <View style={styles.cardContent}>
+              <View style={styles.sectionHeader}>
+                <LinearGradient
+                  colors={['#4ade80', '#10b981']}
+                  style={styles.iconContainer}
+                >
+                  <Ionicons name="cash" size={16} color="white" />
+                </LinearGradient>
+                <Text style={styles.sectionTitle}>タバコの価格</Text>
+              </View>
 
-      {/* 過去の平均設定 */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>過去の喫煙データ</Text>
-        <Text style={styles.label}>今までの1日あたりの平均本数</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="number-pad"
-          value={inputValues.averageCountBefore}
-          onChangeText={v => {
-            const numericValue = v.replace(/[^0-9]/g, '');
-            setInputValues({ ...inputValues, averageCountBefore: numericValue });
-            
-            if (numericValue !== '') {
-              const parsedValue = Number(numericValue);
-              if (!isNaN(parsedValue) && parsedValue >= 0) {
-                setLocalSettings({ ...localSettings, averageCountBefore: parsedValue });
-              }
-            }
-          }}
-          onBlur={() => {
-            const parsedValue = Number(inputValues.averageCountBefore);
-            if (inputValues.averageCountBefore === '' || isNaN(parsedValue) || parsedValue < 0) {
-              const defaultValue = 20;
-              setInputValues({ ...inputValues, averageCountBefore: String(defaultValue) });
-              setLocalSettings({ ...localSettings, averageCountBefore: defaultValue });
-            }
-          }}
-          placeholder="20"
-        />
-        <Text style={styles.hint}>アプリ使用前の平均的な喫煙本数を入力してください</Text>
-        <Text style={styles.hint}>過去の1日の費用: ¥{(localSettings.averageCountBefore * costPerCigarette).toFixed(0)}</Text>
-      </View>
+              <View style={styles.inputContainer}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>1箱あたりの価格 (円)</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={inputValues.pricePerPack}
+                    onChangeText={v => {
+                      setInputValues({ ...inputValues, pricePerPack: v });
+                      
+                      if (v !== '') {
+                        const parsedValue = Number(v);
+                        if (!isNaN(parsedValue) && parsedValue >= 0) {
+                          setLocalSettings({ ...localSettings, pricePerPack: parsedValue });
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      const parsedValue = Number(inputValues.pricePerPack);
+                      if (inputValues.pricePerPack === '' || isNaN(parsedValue) || parsedValue <= 0) {
+                        const defaultValue = 600;
+                        setInputValues({ ...inputValues, pricePerPack: String(defaultValue) });
+                        setLocalSettings({ ...localSettings, pricePerPack: defaultValue });
+                      }
+                    }}
+                    placeholder="600"
+                  />
+                </View>
 
-      {/* 目標設定 */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>目標設定</Text>
-        <Text style={styles.label}>1日の目標本数</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={inputValues.targetCount}
-          onChangeText={v => {
-            setInputValues({ ...inputValues, targetCount: v });
-            
-            if (v !== '') {
-              const parsedValue = Number(v);
-              if (!isNaN(parsedValue) && parsedValue >= 0) {
-                setLocalSettings({ ...localSettings, targetCount: parsedValue });
-              }
-            }
-          }}
-          onBlur={() => {
-            const parsedValue = Number(inputValues.targetCount);
-            if (inputValues.targetCount === '' || isNaN(parsedValue) || parsedValue < 0) {
-              const defaultValue = 10;
-              setInputValues({ ...inputValues, targetCount: String(defaultValue) });
-              setLocalSettings({ ...localSettings, targetCount: defaultValue });
-            }
-          }}
-          placeholder="10"
-        />
-        <Text style={styles.hint}>この本数以下に抑えることを目標とします</Text>
-        <Text style={styles.hint}>目標達成時の1日の費用: ¥{dailyTargetCost.toFixed(0)}</Text>
-        <Text style={styles.hint}>過去との差: -{localSettings.averageCountBefore - localSettings.targetCount}本 (1日¥{((localSettings.averageCountBefore - localSettings.targetCount) * costPerCigarette).toFixed(0)}節約)</Text>
-      </View>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>1箱あたりの本数</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={inputValues.cigarettesPerPack}
+                    onChangeText={v => {
+                      setInputValues({ ...inputValues, cigarettesPerPack: v });
+                      
+                      if (v !== '') {
+                        const parsedValue = Number(v);
+                        if (!isNaN(parsedValue) && parsedValue >= 0) {
+                          setLocalSettings({ ...localSettings, cigarettesPerPack: parsedValue });
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      const parsedValue = Number(inputValues.cigarettesPerPack);
+                      if (inputValues.cigarettesPerPack === '' || isNaN(parsedValue) || parsedValue <= 0) {
+                        const defaultValue = 20;
+                        setInputValues({ ...inputValues, cigarettesPerPack: String(defaultValue) });
+                        setLocalSettings({ ...localSettings, cigarettesPerPack: defaultValue });
+                      }
+                    }}
+                    placeholder="20"
+                  />
+                </View>
 
-      {/* 保存ボタン */}
-      <TouchableOpacity 
-        style={[styles.saveButton, hasChanges && styles.saveButtonHighlight]} 
-        onPress={handleSave}
-      >
-        <Text style={styles.saveButtonText}>
-          {hasChanges ? '設定を保存 ●' : '設定を保存'}
-        </Text>
-      </TouchableOpacity>
-      
-      {hasChanges && (
-        <View style={styles.changesNotice}>
-          <Text style={styles.changesNoticeText}>⚠️ 保存されていない変更があります</Text>
+                <View style={styles.infoBox}>
+                  <Text style={styles.infoText}>1本あたりの価格: ¥{costPerCigarette.toFixed(1)}</Text>
+                </View>
+              </View>
+            </View>
+          </BlurView>
+
+          {/* Past Data Settings */}
+          <BlurView intensity={20} style={styles.settingsCard}>
+            <View style={styles.cardContent}>
+              <View style={styles.sectionHeader}>
+                <LinearGradient
+                  colors={['#60a5fa', '#3b82f6']}
+                  style={styles.iconContainer}
+                >
+                  <Ionicons name="bar-chart" size={16} color="white" />
+                </LinearGradient>
+                <Text style={styles.sectionTitle}>過去の喫煙データ</Text>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>今までの1日あたりの平均本数</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="number-pad"
+                    value={inputValues.averageCountBefore}
+                    onChangeText={v => {
+                      const numericValue = v.replace(/[^0-9]/g, '');
+                      setInputValues({ ...inputValues, averageCountBefore: numericValue });
+                      
+                      if (numericValue !== '') {
+                        const parsedValue = Number(numericValue);
+                        if (!isNaN(parsedValue) && parsedValue >= 0) {
+                          setLocalSettings({ ...localSettings, averageCountBefore: parsedValue });
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      const parsedValue = Number(inputValues.averageCountBefore);
+                      if (inputValues.averageCountBefore === '' || isNaN(parsedValue) || parsedValue < 0) {
+                        const defaultValue = 20;
+                        setInputValues({ ...inputValues, averageCountBefore: String(defaultValue) });
+                        setLocalSettings({ ...localSettings, averageCountBefore: defaultValue });
+                      }
+                    }}
+                    placeholder="20"
+                  />
+                  <Text style={styles.inputHint}>
+                    アプリ使用前の平均的な喫煙本数を入力してください
+                  </Text>
+                </View>
+
+                <View style={styles.pastDataInfoBox}>
+                  <Text style={styles.pastDataInfoText}>過去の1日の費用: ¥{(localSettings.averageCountBefore * costPerCigarette).toFixed(0)}</Text>
+                </View>
+              </View>
+            </View>
+          </BlurView>
+
+          {/* Target Settings */}
+          <BlurView intensity={20} style={styles.settingsCard}>
+            <View style={styles.cardContent}>
+              <View style={styles.sectionHeader}>
+                <LinearGradient
+                  colors={['#f59e0b', '#d97706']}
+                  style={styles.iconContainer}
+                >
+                  <Ionicons name="radio-button-on" size={16} color="white" />
+                </LinearGradient>
+                <Text style={styles.sectionTitle}>目標設定</Text>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <View style={styles.inputGroup}>
+                  <Text style={styles.inputLabel}>1日の目標本数</Text>
+                  <TextInput
+                    style={styles.input}
+                    keyboardType="numeric"
+                    value={inputValues.targetCount}
+                    onChangeText={v => {
+                      setInputValues({ ...inputValues, targetCount: v });
+                      
+                      if (v !== '') {
+                        const parsedValue = Number(v);
+                        if (!isNaN(parsedValue) && parsedValue >= 0) {
+                          setLocalSettings({ ...localSettings, targetCount: parsedValue });
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      const parsedValue = Number(inputValues.targetCount);
+                      if (inputValues.targetCount === '' || isNaN(parsedValue) || parsedValue < 0) {
+                        const defaultValue = 10;
+                        setInputValues({ ...inputValues, targetCount: String(defaultValue) });
+                        setLocalSettings({ ...localSettings, targetCount: defaultValue });
+                      }
+                    }}
+                    placeholder="10"
+                  />
+                  <Text style={styles.inputHint}>
+                    この本数以下に抑えることを目標とします
+                  </Text>
+                </View>
+
+                <View style={styles.goalInfoBox}>
+                  <Text style={styles.goalInfoText}>目標達成時の1日の費用: ¥{dailyTargetCost.toFixed(0)}</Text>
+                  <Text style={styles.goalInfoText}>過去との差: -{localSettings.averageCountBefore - localSettings.targetCount}本 (1日¥{((localSettings.averageCountBefore - localSettings.targetCount) * costPerCigarette).toFixed(0)}節約)</Text>
+                </View>
+              </View>
+            </View>
+          </BlurView>
+
+          {/* Save Button - Redesigned */}
+          <TouchableOpacity 
+            style={[styles.saveButton, hasChanges && styles.saveButtonHighlight]} 
+            onPress={handleSave}
+          >
+            <LinearGradient
+              colors={hasChanges ? ['#f59e0b', '#d97706'] : ['#4ade80', '#10b981']}
+              style={styles.saveButtonGradient}
+            >
+              <Text style={styles.saveButtonText}>
+                {hasChanges ? '設定を保存 ●' : '設定を保存'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
+          
+          {hasChanges && (
+            <BlurView intensity={20} style={styles.changesNotice}>
+              <View style={styles.changesNoticeContent}>
+                <Ionicons name="warning" size={16} color="#d97706" />
+                <Text style={styles.changesNoticeText}>保存されていない変更があります</Text>
+              </View>
+            </BlurView>
+          )}
+
+          {/* Bottom Padding for Navigation */}
+          <View style={{ height: 80 }} />
         </View>
-      )}
-    </ScrollView>
-    </SafeAreaView>
+      </ScrollView>
+    </LinearGradient>
   );
 });
 
 const styles = StyleSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
-    backgroundColor: '#fafafa',
   },
-  root: {
+  content: {
+    gap: 24,
     padding: 16,
-    backgroundColor: '#fafafa',
   },
   header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
-    textAlign: 'center',
+    alignItems: 'center',
   },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#eee',
+  title: {
+    fontSize: 24,
+    color: '#1f2937',
+    fontWeight: '600',
+  },
+  settingsCard: {
+    borderRadius: 24,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+    overflow: 'hidden',
+  },
+  cardContent: {
+    padding: 24,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+  iconContainer: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  label: {
-    fontSize: 14,
-    marginTop: 8,
-    color: '#555',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 6,
-    padding: 8,
-    marginTop: 4,
-    fontSize: 16,
-    backgroundColor: '#f9f9f9',
-  },
-  hint: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 4,
-  },
-  saveButton: {
-    backgroundColor: '#1976d2',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  saveButtonHighlight: {
-    backgroundColor: '#f57c00',
-    shadowColor: '#f57c00',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  changesNotice: {
-    backgroundColor: '#fff3cd',
-    borderColor: '#f0ad4e',
-    borderWidth: 1,
-    borderRadius: 6,
-    padding: 12,
-    marginBottom: 16,
-    alignItems: 'center',
-  },
-  changesNoticeText: {
-    color: '#856404',
-    fontSize: 14,
+    color: '#1f2937',
     fontWeight: '500',
   },
-  tipsTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#7b1fa2',
-    marginBottom: 8,
+  inputContainer: {
+    gap: 16,
   },
-  tip: {
-    fontSize: 13,
-    color: '#7b1fa2',
-    marginBottom: 2,
+  inputGroup: {
+    gap: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    color: '#374151',
+    fontWeight: '500',
+  },
+  input: {
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  infoBox: {
+    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(34, 197, 94, 0.3)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  infoText: {
+    fontSize: 14,
+    color: '#047857',
+    fontWeight: '500',
+  },
+  inputHint: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 4,
+  },
+  pastDataInfoBox: {
+    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(59, 130, 246, 0.3)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  pastDataInfoText: {
+    fontSize: 14,
+    color: '#1d4ed8',
+    fontWeight: '500',
+  },
+  goalInfoBox: {
+    backgroundColor: 'rgba(251, 146, 60, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(251, 146, 60, 0.3)',
+    borderRadius: 8,
+    padding: 12,
+    gap: 4,
+  },
+  goalInfoText: {
+    fontSize: 14,
+    color: '#c2410c',
+    fontWeight: '500',
+  },
+  saveButton: {
+    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 5,
+  },
+  saveButtonHighlight: {
+    shadowOpacity: 0.2,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  saveButtonGradient: {
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  changesNotice: {
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+    overflow: 'hidden',
+  },
+  changesNoticeContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 12,
+  },
+  changesNoticeText: {
+    color: '#d97706',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

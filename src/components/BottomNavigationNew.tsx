@@ -46,8 +46,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderTopWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    backgroundColor: 'transparent',
   },
   tabWrapper: {
     flex: 1,
