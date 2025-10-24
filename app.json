@@ -21,7 +21,9 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDisplayName": "Noタバコ！",
-        "CFBundleName": "Noタバコ！"
+        "CFBundleName": "Noタバコ！",
+        "NSUserTrackingUsageDescription": "このアプリは広告をカスタマイズするためにあなたのデータを使用しません。",
+        "NSLocationWhenInUseUsageDescription": "このアプリは位置情報を使用しません。"
       }
     },
     "android": {
@@ -30,7 +32,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.anonymous.smoking_tracker_mobile"
+      "package": "com.smokingtracker.mobile"
     },
     "web": {
       "favicon": "./assets/favicon.png"
