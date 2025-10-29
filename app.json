@@ -21,9 +21,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDisplayName": "ゼロモク",
-        "CFBundleName": "ゼロモク",
-        "NSUserTrackingUsageDescription": "このアプリは広告をカスタマイズするためにあなたのデータを使用しません。",
-        "NSLocationWhenInUseUsageDescription": "このアプリは位置情報を使用しません。"
+        "CFBundleName": "ゼロモク"
       }
     },
     "android": {
